@@ -109,7 +109,7 @@ app.use((req,res,next)=>{
 //     let registeredUser = await User.register(fakeUser,"helloWorld");
 //     res.send(registeredUser)
 // })
-const indexRoute = require("./routes/listing.js");
+const indexRoute = require("./routes/index");
 app.use("/", indexRoute);
 
 app.use("/listings",listingRouter);
