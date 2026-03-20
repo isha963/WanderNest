@@ -31,6 +31,16 @@ module.exports.isOwner = async(req,res,next)=>{
     next();  
 }
 
+module.exports.isHost = async (req, res, next) => {
+    if (!req.user || req.user.role !== "host") {
+        req.flash("error", "Access denied");
+        return res.redirect("/");
+
+    }
+    next();
+}
+
+
 module.exports.validateListing = (req,res,next) =>{
     let {error} = listingSchema.validate(req.body);
     if(error){

@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pay Booking</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  </head>
+  <body>
+    <h2>Pay your booking</h2>
+
+    <div>
+      <div><strong>Listing:</strong> <%= booking.listing && booking.listing.title ? booking.listing.title : "" %></div>
+      <div>
+        <strong>Check-in:</strong>
+        <%= booking.checkIn ? new Date(booking.checkIn).toDateString() : "" %>
+      </div>
+      <div>
+        <strong>Check-out:</strong>
+        <%= booking.checkOut ? new Date(booking.checkOut).toDateString() : "" %>
+      </div>
+      <div><strong>Total price:</strong> <%= booking.totalPrice %></div>
+    </div>
+
+    <button id="payNowBtn" type="button">Pay Now</button>
+
+    <script>
+      const RAZORPAY_KEY_ID = "<%= process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID : '' %>";
+      const bookingId = "<%= booking._id %>";
+
+      function toJsonOrThrow(res) {
+        return res.json().then((data) => {
+          if (!res.ok) throw data;
+          return data;
+        });
+      }
+
+      document.getElementById("payNowBtn").addEventListener("click", async () => {
+        try {
+          if (!RAZORPAY_KEY_ID) {
+            alert("Razorpay key is missing on the server.");
+            return;
+          }
+
+          const orderRes = await fetch(`/bookings/${bookingId}/create-order`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+          });
+
+          const order = await toJsonOrThrow(orderRes);
+
+          const options = {
+            key: RAZORPAY_KEY_ID,
+            amount: order.amount,
+            currency: order.currency,
+            order_id: order.id,
+            handler: async function (response) {
+              try {
+                const verifyRes = await fetch("/bookings/verify-payment", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "same-origin",
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
+                });
+
+                const verifyData = await toJsonOrThrow(verifyRes);
+                if (verifyData && verifyData.success) window.location.href = "/listings";
+                else alert("Payment verification failed.");
+              } catch (e) {
+                alert("Payment verification failed.");
+              }
+            },
+          };
+
+          const rzp = new Razorpay(options);
+          rzp.open();
+        } catch (err) {
+          const message = err && err.error ? err.error : "Payment failed.";
+          alert(message);
+        }
+      });
+    </script>
+  </body>
+</html>
+

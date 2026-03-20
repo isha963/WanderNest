@@ -18,7 +18,7 @@ router.route("/")//Index and create route
 //New route
 router.get("/new", isLoggedIn, listingController.renderNewForm);
 
-router.get("/search", wrapAsync(listingController.showSearch));
+router.get("/search", wrapAsync( listingController.showSearch));
 
 router.route("/:id")//SHOW Route,Update route,Delete route
     .get( wrapAsync(listingController.showListing))

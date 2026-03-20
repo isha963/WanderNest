@@ -24,6 +24,7 @@ const User = require("./models/user.js")
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
+const bookingRouter = require("./routes/booking.js");
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -74,7 +75,7 @@ const sessionOptions = {
 
 
 
-// const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+
 
 
 // app.get("/", (req, res) => {
@@ -115,7 +116,7 @@ app.use("/", indexRoute);
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter); 
 app.use("/",userRouter);
-
+app.use("/bookings", bookingRouter);
 app.all("*",(req,res,next)=>{
     next(new ExpressError(404,"Page not found!"));
 });

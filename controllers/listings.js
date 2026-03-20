@@ -1,5 +1,6 @@
 const { x } = require("joi");
 const Listing = require("../models/listings");
+const Booking = require("../models/booking");
 // const mbxTilesets = require('@mapbox/mapbox-sdk/services/tilesets');
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
@@ -17,7 +18,7 @@ module.exports.index =  async (req, res) => {
     // for(listing of allListings){
     //     listing.geometry = response.body.features[0].geometry;
     // }
-
+    
     res.render("listings/index.ejs", { allListings });
 };
 
@@ -35,10 +36,12 @@ module.exports.showListing =async (req, res) => {
 
     if(!listing){
         req.flash("error","Listing you requested for does not exist!");
-        res.redirect("/listings");
+        return res.redirect("/listings");
     }
 
-    res.render("listings/show.ejs", { listing });
+     const bookings = await Booking.find({ listing: id });
+
+    res.render("listings/show.ejs", { listing , bookings});
 }
 
 module.exports.showSearch = (async (req,res)=>{
