@@ -4,7 +4,7 @@ const Listing = require("../models/listings.js");
 const wrapAsync = require("../utils/wrapAsync.js");
 // const ExpressError = require("../utils/ExpressError.js");
 // const {listingSchema} = require("../schema.js");
-const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
+const { isLoggedIn, isOwner, validateListing, isHost } = require("../middleware.js");
 const listingController = require("../controllers/listings.js");
 const multer  = require('multer');
 const {storage} = require("../cloudConfig.js");
@@ -16,7 +16,7 @@ router.route("/")//Index and create route
  
 
 //New route
-router.get("/new", isLoggedIn, listingController.renderNewForm);
+router.get("/new", isLoggedIn, isHost, listingController.renderNewForm);
 
 router.get("/search", wrapAsync( listingController.showSearch));
 

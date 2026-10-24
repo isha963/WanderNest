@@ -44,65 +44,100 @@
 
             <%} %>
 
-            <div class="col-8 offset-3 mt-3 mb-3">
+            <% if (currUser && !listing.owner._id.equals(currUser._id)) { %>
+            <div class="col-10 offset-1 col-md-6 offset-md-3 mt-4 mb-4">
+                <hr class="my-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-3">Book This Listing</h4>
+                        <p class="text-muted small mb-4">Choose your check-in and check-out dates, then request a booking.</p>
 
-                <hr>
+                        <form action="/bookings" method="POST" class="row g-3">
+                            <input type="hidden" name="listingId" value="<%= listing._id %>">
 
-                <h4>Book This Listing</h4>
+                            <div class="col-md-6">
+                                <label for="bookingCheckIn" class="form-label fw-semibold">Check-in</label>
+                                <input type="date" class="form-control" id="bookingCheckIn" name="checkIn" required>
+                            </div>
 
-                <form action="/bookings" method="POST">
-                    
-                    <!-- Hidden listing ID -->
-                    <input type="hidden" name="listingId" value="<%= listing._id %>">
+                            <div class="col-md-6">
+                                <label for="bookingCheckOut" class="form-label fw-semibold">Check-out</label>
+                                <input type="date" class="form-control" id="bookingCheckOut" name="checkOut" required>
+                            </div>
 
-                    <div>
-                        <label>Check In</label>
-                        <input type="date" name="checkIn" required>
+                            <div class="col-12 mt-2">
+                                <button type="submit" class="btn btn-primary btn-lg px-4 fw-semibold">
+                                    Request Booking
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <div>
-                        <label>Check Out</label>
-                        <input type="date" name="checkOut" required>
-                    </div>
-
-                    <button type="submit">Request Booking</button>
-                </form>
-
+                </div>
             </div>
+            
+            <% } %> 
 
-            <div class="col-8 offset-3 mt-3 mb-3">
+            <div class="col-10 offset-1 col-md-6 offset-md-3 mt-2 mb-4">
             <% if (currUser) { %>
-
+            <h5 class="mb-3 fw-semibold">Your bookings on this listing</h5>
+            <div class="row g-3">
             <% bookings.forEach(b => { %>
 
                 <% 
                 const isHost = listing.owner.equals(currUser._id);
                 const isBookingUser = b.user.equals(currUser._id);
+                let statusBadgeClass = "bg-secondary";
+                if (b.status === "pending") statusBadgeClass = "bg-warning text-dark";
+                else if (b.status === "approved") statusBadgeClass = "bg-primary";
+                else if (b.status === "confirmed") statusBadgeClass = "bg-success";
                 %>
 
                 <% if (isHost || isBookingUser) { %>
 
-                <p>
-                    <strong>Check In:</strong> <%= b.checkIn.toDateString() %> |
-                    <strong>Check Out:</strong> <%= b.checkOut.toDateString() %> |
-                    <strong>Status:</strong> <%= b.status %>
+                <div class="col-12">
+                    <div class="card border shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                <div class="small text-muted">
+                                    <span class="fw-semibold text-body">Check-in:</span>
+                                    <%= b.checkIn.toDateString() %>
+                                </div>
+                                <div class="small text-muted">
+                                    <span class="fw-semibold text-body">Check-out:</span>
+                                    <%= b.checkOut.toDateString() %>
+                                </div>
+                                <div>
+                                    <span class="badge <%= statusBadgeClass %> text-uppercase px-3 py-2"><%= b.status %></span>
+                                </div>
+                            </div>
 
-                    <% if (isHost && b.status === "pending") { %>
-                    <form action="/bookings/<%= b._id %>/confirm" method="POST" style="display:inline;">
-                        <button type="submit">Confirm</button>
-                    </form>
-                    <% } %>
-                </p>
+                            <% if (isHost && b.status === "pending") { %>
+                            <form action="/bookings/<%= b._id %>/approve" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-dark mt-2">Approve</button>
+                            </form>
+                            <form action="/bookings/<%= b._id %>/reject" method="POST" class="d-inline ms-1">
+                                <button type="submit" class="btn btn-sm btn-outline-danger mt-2">Reject</button>
+                            </form>
+                            <% } %>
+                            <% if (isBookingUser && b.status === "approved") { %>
+                            <div class="mt-3">
+                                <a href="/bookings/<%= b._id %>/pay" class="btn btn-success fw-semibold px-4">Pay Now</a>
+                            </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
 
                 <% } %>
 
             <% }) %>
-
+            </div>
             <% } %>
             </div>
                 <div class="col-8 offset-3 mt-3 mb-3">
                     <% if(currUser){ %>
                         <hr>
+                         <% if (currUser && !listing.owner._id.equals(currUser._id)) { %>
                         <h4>Leave a Review</h4>
                         <form action="/listings/<%= listing.id %>/reviews " method="POST" novalidate
                             class="needs-validation">
@@ -132,6 +167,8 @@
                             <button class="btn btn-outline-dark ">Submit</button>
                         </form>
                         <% } %>
+
+                         <% } %> 
                                     <br>
                             <% if(listing.reviews.length > 0){%>
                                 <div class="row">
