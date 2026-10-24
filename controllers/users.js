@@ -23,13 +23,20 @@ module.exports.signup = async (req, res) => {
 
         const transport = nodemailer.createTransport({
           service: "gmail",
+          host: "smtp.gmail.com",
+          port: 465,
+          secure: true,
           auth: {
             user: process.env.EMAIL,
             pass: process.env.PASS,
           },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 20000,
         });
-
-        const verifyLink = `http://localhost:8080/verify/${token}`;
+const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
+const verifyLink = `${BASE_URL}/verify/${token}`;
+        
 
         await transport.sendMail({
           from: process.env.EMAIL,
