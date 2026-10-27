@@ -13,6 +13,27 @@ module.exports.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    const existingEmail = await User.findOne({ email });
+
+    if (existingEmail) {
+      req.flash(
+        "error",
+        "This email is already registered. Please log in instead.",
+      );
+      return res.redirect("/signup");
+    }
+
+    const existingUsername = await User.findOne({ username });
+
+    if (existingUsername) {
+      req.flash(
+        "error",
+        "This username is already taken. Please choose another.",
+      );
+      return res.redirect("/signup");
+    }
+
+    
     const newUser = new User({ email, username });
     const registeredUser = await User.register(newUser, password);
 
