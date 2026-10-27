@@ -10,57 +10,78 @@ module.exports.renderSignupForm = (req, res) => {
 }
 
 module.exports.signup = async (req, res) => {
-    try {
-        let { username, email, password } = req.body;
-        const newUser = new User({ email, username });
-        const registeredUser = await User.register(newUser, password);
-       
-        const token = crypto.randomBytes(32).toString("hex");
-        registeredUser.verificationToken = token;
-        registeredUser.verificationTokenExpires = Date.now() + 3600000;
-        await registeredUser.save();
-       
-const resend = new Resend(process.env.RESEND_API_KEY);
-        // const transport = nodemailer.createTransport({
-        //   service: "gmail",
-        //   host: "smtp.gmail.com",
-        //   port: 465,
-        //   secure: true,
-        //   auth: {
-        //     user: process.env.EMAIL,
-        //     pass: process.env.PASS,
-        //   },
-        //   connectionTimeout: 10000,
-        //   greetingTimeout: 10000,
-        //   socketTimeout: 20000,
-      // });
-      
-        const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
-      const verifyLink = `${BASE_URL}/verify/${token}`;
-      
-        const { data, error } = await resend.emails.send({
-          from: "WanderNest <onboarding@resend.dev>",
-          to: [registeredUser.email],
-          subject: "Verify your WanderNest account",
-          text: `Welcome to WanderNest! Please verify your email by clicking this link: ${verifyLink}`,
-        });
-      
-      if (error) {
-        console.error("Verification email failed:", error.message);
-        req.flash(
-          "error",
-          "Your account was created, but the verification email could not be sent. Please try again later.",
-        );
-        return res.redirect("/signup");
-      }
+  try {
+    const { username, email, password } = req.body;
 
+    const newUser = new User({ email, username });
+    const registeredUser = await User.register(newUser, password);
 
-        req.flash("success", "Signup successful! Please verify your email.");
-        res.redirect("/login");
-    }catch(e){
-        req.flash("error",e.message)
-        res.redirect("/signup");
+    // Generate and save the email verification token
+    const token = crypto.randomBytes(32).toString("hex");
+
+    registeredUser.verificationToken = token;
+    registeredUser.verificationTokenExpires = Date.now() + 3600000;
+
+    await registeredUser.save();
+
+    // Build the verification link
+    const BASE_URL = (process.env.BASE_URL || "http://localhost:8080").replace(
+      /\/$/,
+      "",
+    );
+
+    const verifyLink = `${BASE_URL}/verify/${token}`;
+
+    // Send the verification email using Google Apps Script
+    const response = await fetch(process.env.GOOGLE_APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        secret: process.env.EMAIL_API_SECRET,
+        to: registeredUser.email,
+        subject: "Verify your WanderNest account",
+        text: `Welcome to WanderNest!
+
+Please verify your email by clicking the link below:
+
+${verifyLink}
+
+This link expires in one hour.
+
+If you did not create this account, you can ignore this email.`,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error(
+        "Verification email failed:",
+        result.message || "Unknown email service error",
+      );
+
+      req.flash(
+        "error",
+        "Your account was created, but the verification email could not be sent. Please try again later.",
+      );
+
+      return res.redirect("/signup");
     }
+
+    req.flash(
+      "success",
+      "Signup successful! Please check your email to verify your account.",
+    );
+
+    return res.redirect("/login");
+  } catch (e) {
+    console.error("Signup error:", e.message);
+
+    req.flash("error", e.message);
+    return res.redirect("/signup");
+  }
 };
 
 module.exports.renderloginForm = (req,res)=>{
