@@ -2,7 +2,7 @@ const User = require("../models/user");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
-
+const { Resend } = require("resend");
 
 
 module.exports.renderSignupForm = (req, res) => {
@@ -20,30 +20,40 @@ module.exports.signup = async (req, res) => {
         registeredUser.verificationTokenExpires = Date.now() + 3600000;
         await registeredUser.save();
        
-
-        const transport = nodemailer.createTransport({
-          service: "gmail",
-          host: "smtp.gmail.com",
-          port: 465,
-          secure: true,
-          auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASS,
-          },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 20000,
+const resend = new Resend(process.env.RESEND_API_KEY);
+        // const transport = nodemailer.createTransport({
+        //   service: "gmail",
+        //   host: "smtp.gmail.com",
+        //   port: 465,
+        //   secure: true,
+        //   auth: {
+        //     user: process.env.EMAIL,
+        //     pass: process.env.PASS,
+        //   },
+        //   connectionTimeout: 10000,
+        //   greetingTimeout: 10000,
+        //   socketTimeout: 20000,
+      // });
+      
+        const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
+      const verifyLink = `${BASE_URL}/verify/${token}`;
+      
+        const { data, error } = await resend.emails.send({
+          from: "WanderNest <onboarding@resend.dev>",
+          to: [registeredUser.email],
+          subject: "Verify your WanderNest account",
+          text: `Welcome to WanderNest! Please verify your email by clicking this link: ${verifyLink}`,
         });
-const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
-const verifyLink = `${BASE_URL}/verify/${token}`;
-        
+      
+      if (error) {
+        console.error("Verification email failed:", error.message);
+        req.flash(
+          "error",
+          "Your account was created, but the verification email could not be sent. Please try again later.",
+        );
+        return res.redirect("/signup");
+      }
 
-        await transport.sendMail({
-          from: process.env.EMAIL,
-          to: registeredUser.email,
-          subject: "verify your WanderNest account",
-          text:  `Welcome to WanderNest! Please verify your email by clicking this link: ${verifyLink}`,
-        });
 
         req.flash("success", "Signup successful! Please verify your email.");
         res.redirect("/login");
