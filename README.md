@@ -25,53 +25,8 @@ WanderNest is a full-stack rental listing and booking website inspired by Airbnb
 
 **Authentication:** Passport.js, Express Session
 
-**Other Services:** Cloudinary, Mapbox, Razorpay, Google Apps Script, Nodemailer
+**Other Services:** Cloudinary, Mapbox, Razorpay, Google Apps Script
 
-## Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/isha963/WanderNest.git
-   ```
-
-2. Go to the project directory:
-
-   ```bash
-   cd WanderNest
-   ```
-
-3. Install the dependencies:
-
-   ```bash
-   npm install
-   ```
-
-4. Create a `.env` file in the root directory and add the required environment variables.
-
-5. Start the application:
-
-   ```bash
-   npm start
-   ```
-
-   If your project uses a different start script, use the appropriate command from `package.json`.
-
-## Environment Variables
-
-Add the required configuration to your `.env` file. These may include:
-
-- `MONGO_URI`
-- `SECRET`
-- `BASE_URL`
-- `CLOUDINARY_CLOUD_NAME`
-- `CLOUDINARY_KEY`
-- `CLOUDINARY_SECRET`
-- `MAP_TOKEN`
-- Razorpay API credentials
-- Email service configuration
-
-Keep your `.env` file private and never upload API keys or passwords to GitHub.
 
 ## Live Demo
 
